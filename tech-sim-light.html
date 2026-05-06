@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRT Tech Simulation — Tharaya Tabloi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4f9;--card:#ffffff;--card2:#f8fafc;
+  --blue:#2563eb;--blue2:#3b82f6;--blue3:#1d4ed8;--blue-glow:rgba(37,99,235,.25);
+  --teal:#0891b2;--teal-glow:rgba(8,145,178,.25);
+  --green:#16a34a;--green-pale:rgba(22,163,74,.1);--green-glow:rgba(22,163,74,.25);
+  --red:#dc2626;--red-pale:rgba(220,38,38,.1);--red-glow:rgba(220,38,38,.25);
+  --amber:#d97706;--amber-pale:rgba(217,119,6,.1);
+  --text:#1e293b;--muted:#64748b;--border:rgba(148,163,184,.25);--border2:rgba(148,163,184,.4);
+  --mono:'IBM Plex Mono',monospace;
+  --cream:#faf9f6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+
+/* scanline overlay removed for light theme */
+body::before{display:none}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:0;padding:0 28px;
+  box-shadow:0 1px 8px rgba(37,99,235,.08);
+}
+.nav-brand{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  color:var(--blue3);padding:14px 20px 14px 0;
+  border-right:1px solid var(--border2);margin-right:4px;
+  letter-spacing:.02em;
+}
+.tab{
+  padding:14px 18px;font-size:12.5px;font-weight:600;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+  display:flex;align-items:center;gap:7px;letter-spacing:.02em;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue3);border-bottom-color:var(--blue2)}
+.tab-pip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── HERO ── */
+.hero{
+  padding:48px 40px 36px;
+  background:linear-gradient(135deg,rgba(37,99,235,.06) 0%,rgba(8,145,178,.04) 50%,var(--cream) 100%);
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.12),transparent 70%);
+  pointer-events:none;
+}
+.hero-tag{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:800;line-height:1.1;margin-bottom:8px}
+.hero h1 span{color:var(--blue3)}
+.hero p{font-size:13px;color:var(--muted);max-width:620px;line-height:1.65}
+
+/* ── SECTIONS ── */
+.section{display:none;padding:32px 40px 48px}
+.section.active{display:block}
+
+/* ── CARD ── */
+.panel{background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden}
+.panel-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.ph-dot{width:8px;height:8px;border-radius:50%}
+.ph-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.ph-sub{font-size:11px;color:var(--muted);margin-left:auto}
+.panel-body{padding:20px}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:100px;border:1px solid}
+.badge-blue{background:rgba(37,99,235,.15);color:var(--blue3);border-color:rgba(37,99,235,.3)}
+.badge-green{background:var(--green-pale);color:var(--green);border-color:rgba(34,197,94,.3)}
+.badge-red{background:var(--red-pale);color:var(--red);border-color:rgba(239,68,68,.3)}
+.badge-amber{background:var(--amber-pale);color:var(--amber);border-color:rgba(245,158,11,.3)}
+.badge-teal{background:rgba(6,182,212,.12);color:var(--teal);border-color:rgba(6,182,212,.3)}
+
+/* ═══════════ SECTION 1 — CV ═══════════ */
+.cv-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;max-width:1200px;margin:0 auto}
+
+/* camera */
+.cam-shell{
+  background:#dbeafe;border-radius:16px;border:1px solid var(--border2);
+  overflow:hidden;position:relative;aspect-ratio:16/10;
+}
+.cam-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 60%,#bfdbfe 100%);
+}
+
+/* grid overlay */
+.cam-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(37,99,235,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.1) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* conveyor belt */
+.conveyor{position:absolute;bottom:0;left:0;right:0;height:90px}
+.conv-body{
+  position:absolute;bottom:0;left:0;right:0;height:70px;
+  background:linear-gradient(180deg,#bfdbfe 0%,#93c5fd 100%);
+  border-top:2px solid rgba(37,99,235,.5);
+}
+.conv-rollers{position:absolute;bottom:8px;left:0;right:0;display:flex;gap:0;overflow:hidden}
+.conv-belt-strip{
+  position:absolute;bottom:0;left:0;right:0;height:50px;
+  background:repeating-linear-gradient(90deg,rgba(37,99,235,.2) 0px,rgba(37,99,235,.2) 2px,transparent 2px,transparent 36px);
+  animation:beltmove 1.2s linear infinite;
+}
+@keyframes beltmove{0%{background-position:0 0}100%{background-position:38px 0}}
+
+/* scan beam */
+.scan-beam{
+  position:absolute;left:50%;top:0;bottom:90px;width:2px;transform:translateX(-50%);
+  background:linear-gradient(180deg,transparent 0%,rgba(34,197,94,.8) 40%,rgba(34,197,94,1) 50%,rgba(34,197,94,.8) 60%,transparent 100%);
+  box-shadow:0 0 20px 4px rgba(34,197,94,.4);
+}
+.scan-beam::before{
+  content:'';position:absolute;left:-30px;right:-30px;top:0;bottom:0;
+  background:linear-gradient(90deg,transparent,rgba(34,197,94,.04),rgba(34,197,94,.08),rgba(34,197,94,.04),transparent);
+}
+
+/* items on belt */
+.belt-item{
+  position:absolute;bottom:72px;
+  width:70px;height:60px;border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:26px;line-height:1;
+  border:1.5px solid rgba(37,99,235,.25);
+  background:linear-gradient(135deg,#ffffff,#f0f7ff);
+  box-shadow:0 4px 16px rgba(37,99,235,.15);
+  transition:left .05s linear;
+}
+.item-label{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:3px;letter-spacing:.06em}
+
+/* bounding box */
+.bbox{
+  position:absolute;border:2px solid;border-radius:6px;
+  pointer-events:none;transition:all .15s;
+  display:flex;align-items:flex-start;justify-content:flex-end;
+}
+.bbox-label{
+  font-family:var(--mono);font-size:9px;font-weight:600;
+  padding:2px 6px;border-radius:0 0 0 5px;margin-top:-2px;margin-right:-2px;
+}
+
+/* HUD overlays */
+.cam-hud-tl{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:6px}
+.cam-hud-tr{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.cam-hud-bl{position:absolute;bottom:96px;left:12px}
+.hud-tag{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(37,99,235,.25);color:var(--text);display:flex;align-items:center;gap:6px}
+.rec-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:recdot 1s infinite}
+@keyframes recdot{0%,100%{opacity:1}50%{opacity:.2}}
+.hud-fps{font-family:var(--mono);font-size:9px;color:var(--muted)}
+
+/* corner brackets */width:20px;height:20px;border-color:var(--teal);border-style:solid;opacity:.6}
+.corner-tl{top:8px;left:8px;border-width:2px 0 0 2px}
+.corner-tr{top:8px;right:8px;border-width:2px 2px 0 0}
+.corner-bl{bottom:96px;left:8px;border-width:0 0 2px 2px}
+.corner-br{bottom:96px;right:8px;border-width:0 2px 2px 0}
+
+/* start overlay */
+.cam-overlay{
+  position:absolute;inset:0;background:rgba(240,244,249,.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  z-index:10;transition:opacity .5s;
+}
+.cam-overlay.hide{opacity:0;pointer-events:none}
+.play-btn{
+  width:60px;height:60px;border-radius:50%;background:var(--blue);border:none;
+  color:white;font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 0 var(--blue-glow);animation:playpulse 2s infinite;
+  transition:transform .2s;
+}
+.play-btn:hover{transform:scale(1.1)}
+@keyframes playpulse{0%{box-shadow:0 0 0 0 var(--blue-glow)}70%{box-shadow:0 0 0 18px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.play-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+
+/* RIGHT PANEL */
+.cv-right{display:flex;flex-direction:column;gap:16px}
+
+/* counters */
+.cv-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.cv-stat{
+  background:var(--cream);border:1px solid var(--border2);border-radius:12px;
+  padding:14px;text-align:center;position:relative;overflow:hidden;
+}
+.cv-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px}
+.cv-stat.pass::before{background:var(--green)}
+.cv-stat.fail::before{background:var(--red)}
+.cv-stat.acc::before{background:var(--amber)}
+.cv-stat-val{font-family:'Syne',sans-serif;font-size:30px;font-weight:800}
+.cv-stat-lab{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);margin-top:3px}
+
+/* terminal log */
+.terminal{
+  background:var(--cream);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:1;min-height:0;
+}
+.term-bar{background:#f0f4f9;padding:8px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:6px;letter-spacing:.05em}
+.term-body{padding:12px;height:200px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.7}
+.term-body::-webkit-scrollbar{width:3px}
+.term-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.tl{display:flex;gap:8px}
+.t-time{color:#94a3b8;flex-shrink:0}
+.t-pass{color:#16a34a}.t-fail{color:#dc2626}.t-warn{color:#d97706}.t-info{color:#2563eb}.t-sys{color:#475569}
+
+/* controls */
+.cv-controls{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  padding:8px 16px;border-radius:9px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1px solid;transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:6px;
+}
+.btn-blue{background:var(--blue);color:white;border-color:var(--blue)}
+.btn-blue:hover{background:#1d4ed8;box-shadow:0 0 20px var(--blue-glow)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--border2)}
+.btn-ghost:hover{border-color:var(--border2);background:rgba(255,255,255,.05)}
+.btn-red{background:rgba(239,68,68,.15);color:var(--red);border-color:rgba(239,68,68,.3)}
+.btn-red:hover{background:rgba(239,68,68,.25)}
+.btn-amber{background:var(--amber-pale);color:var(--amber);border-color:rgba(245,158,11,.3)}
+
+/* ═══════════ SECTION 2 — RISK ═══════════ */
+.risk-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1200px;margin:0 auto}
+
+.risk-top-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;max-width:1200px;margin-left:auto;margin-right:auto}
+.rs-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:14px;
+  padding:16px 20px;position:relative;overflow:hidden;
+}
+.rs-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.rs-card.total::after{background:var(--blue2)}
+.rs-card.high::after{background:var(--red)}
+.rs-card.med::after{background:var(--amber)}
+.rs-card.ok::after{background:var(--green)}
+.rs-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1}
+.rs-lab{font-size:12px;color:var(--muted);margin-top:5px;font-weight:500}
+.rs-ai{font-family:var(--mono);font-size:9px;color:var(--teal);margin-top:8px;letter-spacing:.06em}
+
+/* table */
+.risk-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.risk-tbl th{
+  text-align:left;padding:10px 14px;
+  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--border);background:var(--cream);
+}
+.risk-tbl td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.risk-tbl tr.data-row{cursor:pointer;transition:background .15s}
+.risk-tbl tr.data-row:hover td{background:rgba(37,99,235,.05)}
+.risk-tbl tr.data-row.selected td{background:rgba(37,99,235,.08)}
+
+.score-ring{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  border:2px solid;
+}
+.mini-bar{height:4px;border-radius:100px;background:var(--border);margin-top:4px}
+.mini-fill{height:100%;border-radius:100px;transition:width .8s ease}
+
+/* right detail */
+.risk-detail{background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden;position:sticky;top:60px}
+.rd-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--cream)}
+.rd-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;color:var(--text)}
+.rd-body{padding:18px}
+.rd-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.rd-kpi{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.rd-kpi-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.rd-kpi-lab{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.06em}
+.rd-trend{margin-bottom:16px}
+.trend-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.sparkline{display:flex;align-items:flex-end;gap:4px;height:48px}
+.sp-bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:all .5s ease;cursor:pointer;position:relative}
+.sp-bar:hover::after{content:attr(data-val);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--text);white-space:nowrap}
+.rd-actions{display:flex;flex-direction:column;gap:8px}
+.rd-btn{
+  width:100%;padding:10px;border-radius:9px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1px solid;transition:all .2s;text-align:center;font-family:'DM Sans',sans-serif;
+}
+.rd-btn-primary{background:var(--blue);color:white;border-color:var(--blue)}
+.rd-btn-primary:hover{background:#1d4ed8;box-shadow:0 0 16px var(--blue-glow)}
+.rd-btn-ghost{background:transparent;color:var(--text);border-color:var(--border2)}
+.rd-btn-ghost:hover{background:rgba(255,255,255,.04)}
+.rd-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--muted)}
+.rd-placeholder-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+
+/* ai badge pulsing */
+.ai-live{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:10px;color:var(--teal);
+  background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);
+  padding:4px 12px;border-radius:100px;letter-spacing:.06em;
+}
+.ai-live-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:recdot 1.5s infinite}
+
+/* ═══════════ SECTION 3 — RAMP ═══════════ */
+.ramp-grid{display:grid;grid-template-columns:280px 1fr;gap:20px;max-width:1200px;margin:0 auto}
+
+/* supplier sidebar */
+.sup-sidebar{display:flex;flex-direction:column;gap:10px}
+.sup-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;cursor:pointer;transition:all .25s;
+}
+.sup-card:hover{border-color:var(--border2);transform:translateX(3px)}
+.sup-card.active{border-color:var(--blue2);background:rgba(37,99,235,.08)}
+.sup-code{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:.08em;margin-bottom:4px}
+.sup-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
+.sup-pbar{height:4px;background:var(--border);border-radius:100px;overflow:hidden}
+.sup-pfill{height:100%;border-radius:100px;transition:width .6s ease}
+.sup-pct{font-family:var(--mono);font-size:10px;display:flex;justify-content:space-between;margin-bottom:4px}
+.sup-launch{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px}
+
+/* survey main */
+.survey-wrap{display:flex;flex-direction:column;gap:16px}
+.survey-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.survey-heading{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.survey-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.04em}
+.survey-actions{display:flex;gap:8px}
+
+/* summary pills */
+.survey-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid;font-size:12px;font-weight:600}
+.pill-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+
+/* survey items */
+.s-items{display:flex;flex-direction:column;gap:8px}
+.s-item{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:all .2s;
+}
+.s-item:hover{border-color:var(--border2);background:var(--card2)}
+.s-item.done{border-left:3px solid var(--green)}
+.s-item.warn{border-left:3px solid var(--amber)}
+.s-item.fail{border-left:3px solid var(--red)}
+.s-item.none{border-left:3px solid var(--border2)}
+
+.s-check{
+  width:30px;height:30px;border-radius:8px;border:1.5px solid;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;transition:all .2s;
+}
+.s-check.done{background:var(--green-pale);border-color:rgba(34,197,94,.4);color:var(--green)}
+.s-check.warn{background:var(--amber-pale);border-color:rgba(245,158,11,.4);color:var(--amber)}
+.s-check.fail{background:var(--red-pale);border-color:rgba(239,68,68,.4);color:var(--red)}
+.s-check.none{background:transparent;border-color:var(--border2);color:var(--muted)}
+
+.s-body{flex:1}
+.s-cat{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:2px}
+.s-name{font-size:13px;font-weight:600;color:var(--text)}
+.s-detail{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.s-badge{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;border:1px solid;white-space:nowrap;flex-shrink:0}
+
+/* AI autofill btn */
+.ai-btn{
+  background:linear-gradient(135deg,rgba(37,99,235,.2),rgba(6,182,212,.15));
+  border:1px solid rgba(37,99,235,.4);color:var(--blue3);
+  border-radius:10px;padding:9px 18px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:7px;
+  transition:all .25s;
+}
+.ai-btn:hover{background:linear-gradient(135deg,rgba(37,99,235,.35),rgba(6,182,212,.25));box-shadow:0 0 20px var(--blue-glow)}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9998;
+  background:#ffffff;border:1px solid var(--border2);border-radius:14px;
+  padding:12px 18px;font-size:13px;font-weight:500;color:var(--text);
+  box-shadow:0 8px 32px rgba(37,99,235,.15);
+  transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;gap:10px;max-width:300px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-bar{position:absolute;bottom:0;left:0;height:2px;border-radius:2px;background:var(--blue2);animation:toastbar 3s linear forwards}
+@keyframes toastbar{0%{width:100%}100%{width:0}}
+
+@media(max-width:800px){
+  .cv-grid,.risk-grid,.ramp-grid{grid-template-columns:1fr}
+  .risk-top-stats{grid-template-columns:1fr 1fr}
+  .section{padding:20px}
+  .hero{padding:28px 20px}
+  .risk-detail{position:static}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">SMRT · TECH SIM</div>
+  <div class="tab active" onclick="switchTab('cv',this)"><span class="tab-pip" style="background:#3b82f6"></span>01 Computer Vision</div>
+  <div class="tab" onclick="switchTab('risk',this)"><span class="tab-pip" style="background:#06b6d4"></span>02 AI Risk Dashboard</div>
+  <div class="tab" onclick="switchTab('ramp',this)"><span class="tab-pip" style="background:#22c55e"></span>03 Digital Ramp-Up</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">// technology_proposals · smrt_analyst · ford_motor_company_thailand</div>
+  <h1>Technology <span>Simulation</span> Demo</h1>
+  <p>Interactive prototypes showing how AI and digital tools can modernise SMRT operations — from supplier inspection to risk prediction and launch readiness tracking.</p>
+</div>
+
+<!-- ═══════════════════ CV ═══════════════════ -->
+<div class="section active" id="sec-cv">
+  <div class="cv-grid">
+    <div>
+      <!-- camera shell -->
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-header">
+          <span class="ph-dot" style="background:var(--red)"></span>
+          <span class="ph-dot" style="background:var(--amber)"></span>
+          <span class="ph-dot" style="background:var(--green)"></span>
+          <span class="ph-title" style="color:var(--blue3);margin-left:6px">camera_feed_01 — SUP-TH-042</span>
+          <span class="ph-sub"><span class="ai-live"><span class="ai-live-dot"></span>CV MODEL ACTIVE</span></span>
+        </div>
+      </div>
+
+      <div class="cam-shell" id="camShell">
+        <div class="cam-bg"></div>
+        <div class="cam-grid"></div>
+
+        <!-- corners -->
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
+        <!-- scan beam -->
+        <div class="scan-beam" id="scanBeam"></div>
+
+        <!-- items -->
+        <div class="belt-item" id="bi0" style="left:-90px"><span>📦</span><span class="item-label">PKG-001</span></div>
+        <div class="belt-item" id="bi1" style="left:-280px"><span>🏷️</span><span class="item-label">LBL-002</span></div>
+        <div class="belt-item" id="bi2" style="left:-480px"><span>📦</span><span class="item-label">PKG-003</span></div>
+        <div class="belt-item" id="bi3" style="left:-680px"><span>⚙️</span><span class="item-label">PRT-004</span></div>
+
+        <!-- bounding box result -->
+        <div class="bbox" id="bbox" style="display:none"></div>
+
+        <!-- HUD -->
+        <div class="cam-hud-tl">
+          <div class="hud-tag"><span class="rec-dot"></span>REC · <span id="cvTime">00:00</span></div>
+          <div class="hud-tag" style="font-size:9px">RESOLUTION: 1920×1080 · 4K AI</div>
+        </div>
+        <div class="cam-hud-tr">
+          <div class="hud-tag">FPS <span id="cvFps" style="color:var(--green)">30</span></div>
+          <div class="hud-tag">CONF <span id="cvConf" style="color:var(--teal)">—</span></div>
+        </div>
+        <div class="cam-hud-bl">
+          <div class="hud-fps">YOLOv8-SMRT · TensorRT · GPU</div>
+        </div>
+
+        <!-- conveyor -->
+        <div class="conveyor">
+          <div class="conv-body">
+            <div class="conv-belt-strip"></div>
+          </div>
+        </div>
+
+        <!-- start overlay -->
+        <div class="cam-overlay" id="camOverlay">
+          <button class="play-btn" onclick="startCV()">▶</button>
+          <div class="play-label">// CLICK TO INITIALISE SYSTEM</div>
+        </div>
+      </div>
+
+      <div class="cv-controls" style="margin-top:12px">
+        <button class="btn btn-blue" onclick="startCV()">▶ Start</button>
+        <button class="btn btn-ghost" onclick="pauseCV()">⏸ Pause</button>
+        <button class="btn btn-amber" onclick="injectDefect()">⚠ Inject Defect</button>
+        <button class="btn btn-red" onclick="resetCV()">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="cv-right">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="ph-title">Inspection Results</span>
+          <span class="ph-sub">live session</span>
+        </div>
+        <div class="panel-body">
+          <div class="cv-stats">
+            <div class="cv-stat pass">
+              <div class="cv-stat-val" id="cPass" style="color:var(--green)">0</div>
+              <div class="cv-stat-lab">✓ PASS</div>
+            </div>
+            <div class="cv-stat fail">
+              <div class="cv-stat-val" id="cFail" style="color:var(--red)">0</div>
+              <div class="cv-stat-lab">✗ FAIL</div>
+            </div>
+            <div class="cv-stat acc">
+              <div class="cv-stat-val" id="cAcc" style="color:var(--amber)">—</div>
+              <div class="cv-stat-lab">ACCURACY</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="terminal" style="flex:1">
+        <div class="term-bar">
+          <div class="term-dot" style="background:#ef4444"></div>
+          <div class="term-dot" style="background:#f59e0b"></div>
+          <div class="term-dot" style="background:#22c55e"></div>
+          <div class="term-title">system_log — smrt_cv_inspector.py</div>
+        </div>
+        <div class="term-body" id="termBody">
+          <div class="tl"><span class="t-time">00:00:00</span><span class="t-sys">$&gt; Initialising SMRT Vision System v2.4...</span></div>
+          <div class="tl"><span class="t-time">00:00:00</span><span class="t-info">Loading YOLOv8-SMRT model weights... OK</span></div>
+          <div class="tl"><span class="t-time">00:00:00</span><span class="t-sys">Camera SUP-TH-042 connected · awaiting stream</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="ph-title">Impact vs. Manual Inspection</span></div>
+        <div class="panel-body" style="padding:14px 18px">
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+              <span style="color:var(--muted)">Speed</span>
+              <div style="display:flex;gap:8px">
+                <span class="badge badge-red">Manual: 2 pcs/min</span>
+                <span class="badge badge-green">AI: 45 pcs/min</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+              <span style="color:var(--muted)">Accuracy</span>
+              <div style="display:flex;gap:8px">
+                <span class="badge badge-red">Human: ~82%</span>
+                <span class="badge badge-green">AI: 99.2%</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+              <span style="color:var(--muted)">Coverage</span>
+              <div style="display:flex;gap:8px">
+                <span class="badge badge-red">2 shifts only</span>
+                <span class="badge badge-green">24 / 7 / 365</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ RISK ═══════════════════ -->
+<div class="section" id="sec-risk">
+
+  <div class="risk-top-stats">
+    <div class="rs-card total">
+      <div class="rs-num" style="color:var(--blue3)">24</div>
+      <div class="rs-lab">Total Suppliers Monitored</div>
+      <div class="rs-ai">↻ Updated every 15 min</div>
+    </div>
+    <div class="rs-card high">
+      <div class="rs-num" style="color:var(--red)">3</div>
+      <div class="rs-lab">High Risk — Action Required</div>
+      <div class="rs-ai">⬆ +1 since yesterday</div>
+    </div>
+    <div class="rs-card med">
+      <div class="rs-num" style="color:var(--amber)">7</div>
+      <div class="rs-lab">Medium Risk — Monitoring</div>
+      <div class="rs-ai">→ Stable</div>
+    </div>
+    <div class="rs-card ok">
+      <div class="rs-num" style="color:var(--green)">14</div>
+      <div class="rs-lab">On Track — Healthy</div>
+      <div class="rs-ai">↓ 2 resolved this week</div>
+    </div>
+  </div>
+
+  <div class="risk-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="ph-title">Supplier Risk Matrix</span>
+        <span class="ph-sub"><span class="ai-live"><span class="ai-live-dot"></span>AI SCORING LIVE</span></span>
+      </div>
+      <table class="risk-tbl" id="riskTbl">
+        <thead>
+          <tr>
+            <th>Supplier</th>
+            <th>Risk</th>
+            <th>6MWA</th>
+            <th>ASN Acc.</th>
+            <th>Prem. Freight</th>
+            <th>AI Signal</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="riskBody"></tbody>
+      </table>
+    </div>
+
+    <!-- detail sidebar -->
+    <div class="risk-detail" id="riskDetail">
+      <div class="rd-placeholder" id="rdPlaceholder">
+        <div class="rd-placeholder-icon">👈</div>
+        <div style="font-size:13px;color:var(--muted)">Select a supplier row to view AI analysis</div>
+      </div>
+      <div id="rdContent" style="display:none">
+        <div class="rd-header">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:.08em;margin-bottom:4px">SELECTED SUPPLIER</div>
+          <div class="rd-name" id="rdName"></div>
+          <div id="rdStatusBadge" style="margin-top:6px"></div>
+        </div>
+        <div class="rd-body">
+          <div class="rd-kpis" id="rdKpis"></div>
+          <div class="rd-trend">
+            <div class="trend-label">6mwa trend — last 6 months</div>
+            <div class="sparkline" id="rdSpark"></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px">
+              <span>6mo ago</span><span>now</span>
+            </div>
+          </div>
+          <div class="rd-actions" id="rdActions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ RAMP ═══════════════════ -->
+<div class="section" id="sec-ramp">
+  <div class="ramp-grid">
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">// supplier_list</div>
+      <div class="sup-sidebar" id="supSidebar"></div>
+    </div>
+    <div class="survey-wrap" id="surveyWrap">
+      <div style="text-align:center;padding:80px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:14px;opacity:.3">📋</div>
+        <div style="font-family:var(--mono);font-size:12px">Select a supplier to load readiness survey</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
+
+<script>
+// ── TAB ──
+function switchTab(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'))
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById('sec-'+id).classList.add('active')
+  el.classList.add('active')
+}
+
+// ── TOAST ──
+let toastT
+function toast(msg,icon='✅'){
+  const el=document.getElementById('toast')
+  document.getElementById('toastIcon').textContent=icon
+  document.getElementById('toastMsg').textContent=msg
+  el.classList.add('show')
+  clearTimeout(toastT)
+  toastT=setTimeout(()=>el.classList.remove('show'),3200)
+}
+
+// ══════════════════════════════════
+// SECTION 1 — COMPUTER VISION
+// ══════════════════════════════════
+let cvOn=false,cvPass=0,cvFail=0,cvSec=0,cvTicker,cvTimer
+const beltItems=[
+  {id:'bi0',x:-90,speed:1.6,emoji:'📦',code:'PKG-001',defect:false,scanned:false},
+  {id:'bi1',x:-280,speed:1.6,emoji:'🏷️',code:'LBL-002',defect:false,scanned:false},
+  {id:'bi2',x:-480,speed:1.6,emoji:'📦',code:'PKG-003',defect:false,scanned:false},
+  {id:'bi3',x:-680,speed:1.6,emoji:'⚙️',code:'PRT-004',defect:false,scanned:false},
+]
+
+function startCV(){
+  document.getElementById('camOverlay').classList.add('hide')
+  if(cvOn) return
+  cvOn=true
+  cvTimer=setInterval(()=>{cvSec++;updateClock()},1000)
+  addLog('sys','Camera stream initialised · resolution 1920×1080')
+  addLog('info','Belt speed: 1.6 m/s · Scan zone: x=50%')
+  cvLoop()
+}
+function pauseCV(){cvOn=!cvOn;if(cvOn)cvLoop();toast(cvOn?'▶ Resumed':'⏸ Paused',cvOn?'▶':'⏸')}
+function resetCV(){
+  cvOn=false;clearInterval(cvTimer);cvPass=0;cvFail=0;cvSec=0
+  document.getElementById('cPass').textContent='0'
+  document.getElementById('cFail').textContent='0'
+  document.getElementById('cAcc').textContent='—'
+  document.getElementById('cvTime').textContent='00:00'
+  document.getElementById('cvConf').textContent='—'
+  document.getElementById('termBody').innerHTML='<div class="tl"><span class="t-time">00:00:00</span><span class="t-sys">$&gt; System reset. Click START to reinitialise.</span></div>'
+  beltItems.forEach((it,i)=>{it.x=-90-i*190;it.defect=false;it.scanned=false;const el=document.getElementById(it.id);if(el){el.style.left=it.x+'px';el.style.filter='none';el.style.boxShadow=''}})
+  document.getElementById('bbox').style.display='none'
+  document.getElementById('camOverlay').classList.remove('hide')
+}
+function injectDefect(){
+  beltItems[0].defect=true
+  const el=document.getElementById(beltItems[0].id)
+  if(el){el.style.filter='hue-rotate(200deg) brightness(.6)';el.style.boxShadow='0 0 12px rgba(239,68,68,.6)'}
+  addLog('warn','⚠ DEFECT INJECTED → barcode misprint / label orientation error')
+  toast('⚠ Defect injected into item stream','⚠️')
+}
+function updateClock(){
+  const m=String(Math.floor(cvSec/60)).padStart(2,'0')
+  const s=String(cvSec%60).padStart(2,'0')
+  document.getElementById('cvTime').textContent=`${m}:${s}`
+}
+
+function cvLoop(){
+  if(!cvOn) return
+  document.getElementById('cvFps').textContent=Math.floor(28+Math.random()*4)
+  const camW=document.getElementById('camShell').offsetWidth
+  const scanX=camW/2
+
+  beltItems.forEach(it=>{
+    it.x+=it.speed*1.5
+    const el=document.getElementById(it.id)
+    if(el) el.style.left=it.x+'px'
+
+    if(it.x>scanX-8&&it.x<scanX+8&&!it.scanned){
+      it.scanned=true
+      const conf=Math.floor(85+Math.random()*14)
+      document.getElementById('cvConf').textContent=conf+'%'
+      const pass=!it.defect&&Math.random()>.04
+
+      showBBox(it.x,pass,it.code,conf)
+      if(pass){
+        cvPass++
+        addLog('pass',`✓ PASS [${it.code}] · conf:${conf}% · label:OK · barcode:OK · orientation:OK`)
+      } else {
+        cvFail++
+        addLog('fail',`✗ FAIL [${it.code}] · DEFECT DETECTED · alerting SMRT analyst`)
+        toast('🚨 Defect detected — SMRT alerted automatically','🚨')
+      }
+      updateAcc()
+    }
+    if(it.x>camW+100){
+      it.x=-90-Math.random()*50
+      it.scanned=false;it.defect=false
+      if(el){el.style.filter='none';el.style.boxShadow=''}
+    }
+  })
+  requestAnimationFrame(cvLoop)
+}
+
+function showBBox(x,pass,code,conf){
+  const bbox=document.getElementById('bbox')
+  const col=pass?'#22c55e':'#ef4444'
+  bbox.style.cssText=`display:flex;left:${x-35}px;bottom:72px;width:72px;height:62px;border-color:${col};box-shadow:0 0 14px ${col}44`
+  bbox.innerHTML=`<div class="bbox-label" style="background:${col};color:#000;font-family:var(--mono);font-size:8.5px;font-weight:700">${pass?'PASS':'FAIL'} ${conf}%</div>`
+  setTimeout(()=>{bbox.style.display='none'},900)
+}
+
+function addLog(type,msg){
+  const body=document.getElementById('termBody')
+  const t=new Date()
+  const ts=`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}`
+  const div=document.createElement('div');div.className='tl'
+  div.innerHTML=`<span class="t-time">${ts}</span><span class="t-${type}">${msg}</span>`
+  body.appendChild(div);body.scrollTop=body.scrollHeight
+}
+
+function updateAcc(){
+  const total=cvPass+cvFail
+  document.getElementById('cPass').textContent=cvPass
+  document.getElementById('cFail').textContent=cvFail
+  document.getElementById('cAcc').textContent=total?Math.round(cvPass/total*100)+'%':'—'
+}
+
+// ══════════════════════════════════
+// SECTION 2 — AI RISK
+// ══════════════════════════════════
+const suppliers=[
+  {name:'Thai Auto Parts Co.',comm:'Engine Bracket',risk:88,mwa:74,asn:61,pf:18,signal:'⬆ Escalating',status:'high',trend:[68,70,72,73,72,74]},
+  {name:'Precision Metal (TH)',comm:'Door Panel Frame',risk:75,mwa:80,asn:76,pf:11,signal:'⬆ Worsening',status:'high',trend:[90,87,85,82,81,80]},
+  {name:'Rayong Casting Ltd',comm:'Suspension Arm',risk:71,mwa:79,asn:70,pf:14,signal:'⬆ Critical',status:'high',trend:[85,83,81,80,79,79]},
+  {name:'Eastern Plastics',comm:'Bumper Assembly',risk:60,mwa:84,asn:82,pf:6,signal:'→ Stable',status:'med',trend:[80,81,83,83,84,84]},
+  {name:'Northern Wire Mfg',comm:'Wiring Harness',risk:52,mwa:86,asn:89,pf:4,signal:'↓ Improving',status:'med',trend:[79,81,82,84,85,86]},
+  {name:'Siam Seating Co.',comm:'Seat Frame',risk:44,mwa:88,asn:91,pf:2,signal:'↓ Improving',status:'med',trend:[83,84,86,87,88,88]},
+  {name:'BKK Stamping Works',comm:'Chassis Bracket',risk:26,mwa:93,asn:96,pf:0,signal:'✓ On Track',status:'low',trend:[89,90,91,92,92,93]},
+  {name:'Pacific Fasteners',comm:'Fastener Kit',risk:14,mwa:97,asn:99,pf:0,signal:'✓ Excellent',status:'low',trend:[93,94,95,96,97,97]},
+]
+
+const rBody=document.getElementById('riskBody')
+suppliers.forEach((s,i)=>{
+  const col=s.status==='high'?'var(--red)':s.status==='med'?'var(--amber)':'var(--green)'
+  const cl=s.status==='high'?'badge-red':s.status==='med'?'badge-amber':'badge-green'
+  const tr=document.createElement('tr')
+  tr.className='data-row'
+  tr.onclick=()=>showDetail(i,tr)
+  tr.innerHTML=`
+    <td><div style="font-weight:600;font-size:13px">${s.name}</div><div style="font-size:11px;color:var(--muted);margin-top:1px">${s.comm}</div></td>
+    <td>
+      <div class="score-ring" style="border-color:${col};color:${col}">${s.risk}</div>
+      <div class="mini-bar" style="margin-top:6px"><div class="mini-fill" style="width:${s.risk}%;background:${col}"></div></div>
+    </td>
+    <td><span style="font-weight:700;color:${s.mwa<81?'var(--red)':s.mwa<90?'var(--amber)':'var(--green)'}">${s.mwa}%</span></td>
+    <td><span style="color:${s.asn<80?'var(--red)':'var(--text)'}">${s.asn}%</span></td>
+    <td><span style="color:${s.pf>10?'var(--red)':s.pf>5?'var(--amber)':'var(--muted)'}">${s.pf} evt</span></td>
+    <td style="font-weight:600;color:${col};font-size:12px">${s.signal}</td>
+    <td><span class="badge ${cl}">${s.status.toUpperCase()}</span></td>
+  `
+  rBody.appendChild(tr)
+})
+
+let selectedRow=null
+function showDetail(i,tr){
+  if(selectedRow) selectedRow.classList.remove('selected')
+  tr.classList.add('selected');selectedRow=tr
+  const s=suppliers[i]
+  const col=s.status==='high'?'var(--red)':s.status==='med'?'var(--amber)':'var(--green)'
+  document.getElementById('rdPlaceholder').style.display='none'
+  document.getElementById('rdContent').style.display='block'
+  document.getElementById('rdName').textContent=s.name
+  document.getElementById('rdStatusBadge').innerHTML=`<span class="badge ${s.status==='high'?'badge-red':s.status==='med'?'badge-amber':'badge-green'}">${s.signal}</span>`
+
+  document.getElementById('rdKpis').innerHTML=`
+    <div class="rd-kpi"><div class="rd-kpi-val" style="color:${col}">${s.risk}/100</div><div class="rd-kpi-lab">AI RISK SCORE</div></div>
+    <div class="rd-kpi"><div class="rd-kpi-val" style="color:${s.mwa<81?'var(--red)':s.mwa<90?'var(--amber)':'var(--green)'}">${s.mwa}%</div><div class="rd-kpi-lab">6MWA SCORE</div></div>
+    <div class="rd-kpi"><div class="rd-kpi-val" style="color:${s.asn<80?'var(--red)':'var(--green)'}">${s.asn}%</div><div class="rd-kpi-lab">ASN ACCURACY</div></div>
+    <div class="rd-kpi"><div class="rd-kpi-val" style="color:${s.pf>10?'var(--red)':s.pf>5?'var(--amber)':'var(--green)'}">${s.pf}</div><div class="rd-kpi-lab">PREM. FREIGHT</div></div>
+  `
+
+  const spark=document.getElementById('rdSpark')
+  const min=60,max=100
+  spark.innerHTML=s.trend.map(v=>{
+    const h=Math.round((v-min)/(max-min)*44)+4
+    const c=v>=90?'var(--green)':v>=81?'var(--amber)':'var(--red)'
+    return`<div class="sp-bar" style="height:${h}px;background:${c}" data-val="${v}%"></div>`
+  }).join('')
+
+  document.getElementById('rdActions').innerHTML=`
+    <div class="rd-btn rd-btn-primary" onclick="toast('📧 Action plan requested from ${s.name}','📧')">📧 Request Action Plan</div>
+    <div class="rd-btn rd-btn-ghost" onclick="toast('⚠ Escalated to Purchasing & STA','⚠️')">⚠ Escalate to CFT</div>
+    <div class="rd-btn rd-btn-ghost" onclick="toast('📅 Onsite visit scheduled for ${s.name}','📅')">📅 Schedule Onsite Visit</div>
+  `
+}
+
+// ══════════════════════════════════
+// SECTION 3 — RAMP-UP
+// ══════════════════════════════════
+const rampData=[
+  {
+    name:'Thai Auto Parts Co.',code:'SUP-TH-042',launch:'01 Sep 2025',
+    items:[
+      {cat:'Raw Material',name:'RM Buffer Stock (8-week)',detail:'Confirm minimum 8-week raw material buffer before SOP date',st:'done'},
+      {cat:'Capacity',name:'PPAP Production Capacity',detail:'Validate production rate meets Ford daily release schedule',st:'done'},
+      {cat:'Logistics',name:'Dunnage & Returnable Packaging',detail:'All Ford-approved dunnage ordered and received at supplier',st:'warn'},
+      {cat:'Facility',name:'Loading Dock & Ramp Clearance',detail:'Dock dimensions and height confirmed for Ford-spec trucks',st:'fail'},
+      {cat:'Logistics',name:'VSM Sign-off',detail:'Value Stream Map reviewed and approved by SMRT & Supplier MP&L',st:'none'},
+      {cat:'Manpower',name:'Shift Staffing Plan',detail:'Operators confirmed for all 3 shifts during ramp-up period',st:'none'},
+      {cat:'IT / EDI',name:'EDI ASN Transmission Test',detail:'Test ASN successfully transmitted and received by Ford VCMS',st:'done'},
+      {cat:'Quality',name:'Error Proofing (Poka-yoke)',detail:'All poka-yoke devices validated at critical assembly stations',st:'none'},
+    ]
+  },
+  {
+    name:'Precision Metal (TH)',code:'SUP-TH-019',launch:'15 Aug 2025',
+    items:[
+      {cat:'Raw Material',name:'RM Buffer Stock (8-week)',detail:'Confirm minimum 8-week raw material buffer before SOP date',st:'done'},
+      {cat:'Capacity',name:'PPAP Production Capacity',detail:'Validate production rate meets Ford daily release schedule',st:'done'},
+      {cat:'Logistics',name:'Dunnage & Returnable Packaging',detail:'All Ford-approved dunnage ordered and received at supplier',st:'done'},
+      {cat:'Facility',name:'Loading Dock & Ramp Clearance',detail:'Dock dimensions and height confirmed for Ford-spec trucks',st:'done'},
+      {cat:'Logistics',name:'VSM Sign-off',detail:'Value Stream Map reviewed and approved by SMRT & Supplier MP&L',st:'warn'},
+      {cat:'Manpower',name:'Shift Staffing Plan',detail:'Operators confirmed for all 3 shifts during ramp-up period',st:'done'},
+      {cat:'IT / EDI',name:'EDI ASN Transmission Test',detail:'Test ASN successfully transmitted and received by Ford VCMS',st:'done'},
+      {cat:'Quality',name:'Error Proofing (Poka-yoke)',detail:'All poka-yoke devices validated at critical assembly stations',st:'done'},
+    ]
+  },
+  {
+    name:'BKK Stamping Works',code:'SUP-BK-007',launch:'01 Oct 2025',
+    items:[
+      {cat:'Raw Material',name:'RM Buffer Stock (8-week)',detail:'Confirm minimum 8-week raw material buffer before SOP date',st:'none'},
+      {cat:'Capacity',name:'PPAP Production Capacity',detail:'Validate production rate meets Ford daily release schedule',st:'none'},
+      {cat:'Logistics',name:'Dunnage & Returnable Packaging',detail:'All Ford-approved dunnage ordered and received at supplier',st:'none'},
+      {cat:'Facility',name:'Loading Dock & Ramp Clearance',detail:'Dock dimensions and height confirmed for Ford-spec trucks',st:'none'},
+      {cat:'Logistics',name:'VSM Sign-off',detail:'Value Stream Map reviewed and approved by SMRT & Supplier MP&L',st:'none'},
+      {cat:'Manpower',name:'Shift Staffing Plan',detail:'Operators confirmed for all 3 shifts during ramp-up period',st:'none'},
+      {cat:'IT / EDI',name:'EDI ASN Transmission Test',detail:'Test ASN successfully transmitted and received by Ford VCMS',st:'none'},
+      {cat:'Quality',name:'Error Proofing (Poka-yoke)',detail:'All poka-yoke devices validated at critical assembly stations',st:'none'},
+    ]
+  },
+]
+
+let activeSup=0
+
+function buildSidebar(){
+  const sb=document.getElementById('supSidebar')
+  sb.innerHTML=''
+  rampData.forEach((s,i)=>{
+    const done=s.items.filter(it=>it.st==='done').length
+    const pct=Math.round(done/s.items.length*100)
+    const col=pct===100?'var(--green)':pct>50?'var(--blue2)':'var(--amber)'
+    const div=document.createElement('div')
+    div.className='sup-card'+(i===activeSup?' active':'')
+    div.onclick=()=>{activeSup=i;buildSidebar();buildSurvey()}
+    div.innerHTML=`
+      <div class="sup-code">${s.code}</div>
+      <div class="sup-name">${s.name}</div>
+      <div class="sup-pct"><span style="color:${col};font-weight:700">${pct}%</span><span>${done}/${s.items.length} done</span></div>
+      <div class="sup-pbar"><div class="sup-pfill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="sup-launch">Launch: ${s.launch}</div>`
+    sb.appendChild(div)
+  })
+}
+
+function buildSurvey(){
+  const s=rampData[activeSup]
+  const done=s.items.filter(i=>i.st==='done').length
+  const warn=s.items.filter(i=>i.st==='warn').length
+  const fail=s.items.filter(i=>i.st==='fail').length
+  const none=s.items.filter(i=>i.st==='none').length
+  const pct=Math.round(done/s.items.length*100)
+
+  const wrap=document.getElementById('surveyWrap')
+  wrap.innerHTML=`
+    <div class="survey-topbar">
+      <div>
+        <div class="survey-heading">${s.name}</div>
+        <div class="survey-meta">${s.code} · Launch ${s.launch} · ${done}/${s.items.length} complete · ${pct}% ready</div>
+      </div>
+      <div class="survey-actions">
+        <button class="ai-btn" onclick="autoFill()">🤖 AI Auto-Fill</button>
+        <button class="btn btn-ghost" onclick="toast('📤 PDF report exported to SMRT portal','📤')">📤 Export</button>
+      </div>
+    </div>
+    <div class="survey-pills">
+      <div class="pill" style="background:var(--green-pale);border-color:rgba(34,197,94,.3)"><div class="pill-val" style="color:var(--green)">${done}</div><span style="color:var(--green);font-size:12px">Complete</span></div>
+      <div class="pill" style="background:var(--amber-pale);border-color:rgba(245,158,11,.3)"><div class="pill-val" style="color:var(--amber)">${warn}</div><span style="color:var(--amber);font-size:12px">At Risk</span></div>
+      <div class="pill" style="background:var(--red-pale);border-color:rgba(239,68,68,.3)"><div class="pill-val" style="color:var(--red)">${fail}</div><span style="color:var(--red);font-size:12px">Failed</span></div>
+      <div class="pill" style="background:rgba(148,163,184,.08);border-color:var(--border2)"><div class="pill-val" style="color:var(--muted)">${none}</div><span style="color:var(--muted);font-size:12px">Pending</span></div>
+    </div>
+    <div class="s-items" id="sItems"></div>`
+
+  const icons={done:'✓',warn:'⚠',fail:'✗',none:'·'}
+  const stCol={done:'var(--green)',warn:'var(--amber)',fail:'var(--red)',none:'var(--muted)'}
+  const stLab={done:'Complete',warn:'At Risk',fail:'Failed',none:'Pending'}
+
+  const cont=document.getElementById('sItems')
+  s.items.forEach((it,i)=>{
+    const div=document.createElement('div')
+    div.className=`s-item ${it.st}`
+    div.innerHTML=`
+      <div class="s-check ${it.st}" onclick="cycleStatus(${i})">${icons[it.st]}</div>
+      <div class="s-body">
+        <div class="s-cat">${it.cat}</div>
+        <div class="s-name">${it.name}</div>
+        <div class="s-detail">${it.detail}</div>
+      </div>
+      <div class="s-badge" style="color:${stCol[it.st]};border-color:${stCol[it.st]}44;background:${stCol[it.st]}12">${stLab[it.st]}</div>`
+    cont.appendChild(div)
+  })
+}
+
+function cycleStatus(i){
+  const order=['none','done','warn','fail']
+  const s=rampData[activeSup].items[i]
+  s.st=order[(order.indexOf(s.st)+1)%order.length]
+  buildSurvey();buildSidebar()
+  const msgs={done:'✅ Marked complete',warn:'⚠️ Flagged at risk',fail:'🚨 Marked failed',none:'↩ Reset to pending'}
+  toast(msgs[s.st],msgs[s.st].split(' ')[0])
+}
+
+function autoFill(){
+  const s=rampData[activeSup]
+  let i=0
+  toast('🤖 AI scanning supplier data...','🤖')
+  const iv=setInterval(()=>{
+    if(i>=s.items.length){clearInterval(iv);buildSurvey();buildSidebar();toast('✅ AI Auto-Fill complete — review flagged items','✅');return}
+    if(s.items[i].st==='none') s.items[i].st=Math.random()>.2?'done':Math.random()>.5?'warn':'fail'
+    i++
+  },150)
+}
+
+buildSidebar();buildSurvey()
+</script>
+</body>
+</html>
